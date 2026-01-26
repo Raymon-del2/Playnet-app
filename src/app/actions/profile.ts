@@ -141,6 +141,43 @@ export async function getActiveProfile() {
     }
 }
 
+import { deleteChannelVideos, supabase } from "@/lib/supabase";
+
+export async function getProfileVideoCount(profileId: string) {
+    try {
+        if (!supabase) return 0;
+        const { count, error } = await supabase
+            .from('videos')
+            .select('*', { count: 'exact', head: true })
+            .eq('channel_id', profileId);
+
+        if (error) throw error;
+        return count || 0;
+    } catch (e) {
+        console.error("Error getting video count:", e);
+        return 0;
+    }
+}
+
+export async function deleteProfile(profileId: string, userId: string) {
+    try {
+        // 1. Delete videos from Supabase first
+        await deleteChannelVideos(profileId);
+
+        // 2. Delete channel from Turso
+        await turso.execute({
+            sql: "DELETE FROM channels WHERE id = ? AND user_id = ?",
+            args: [profileId, userId]
+        });
+
+        revalidatePath('/select-profile');
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting profile:", error);
+        return { success: false, error: "Failed to delete profile" };
+    }
+}
+
 export async function checkProfileName(name: string) {
     if (!name.startsWith('@')) return { available: false, error: "Must start with @" };
     if (name.length < 3) return { available: false, error: "Too short" };

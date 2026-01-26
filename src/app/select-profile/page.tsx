@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getUserProfiles, createProfile, updateProfileAvatar, selectActiveProfile, checkProfileName } from '@/app/actions/profile';
+import { getUserProfiles, createProfile, updateProfileAvatar, selectActiveProfile, checkProfileName, deleteProfile, getProfileVideoCount } from '@/app/actions/profile';
 
 export default function SelectProfilePage() {
     const router = useRouter();
@@ -18,6 +18,11 @@ export default function SelectProfilePage() {
     const [newAvatar, setNewAvatar] = useState<string | null>(null);
     const [newAccountType, setNewAccountType] = useState<'adult' | 'kids' | 'family'>('adult');
     const [creating, setCreating] = useState(false);
+
+    // Deletion State
+    const [profileToDelete, setProfileToDelete] = useState<any | null>(null);
+    const [videoCount, setVideoCount] = useState(0);
+    const [deleting, setDeleting] = useState(false);
 
     // Name Checker State
     const [nameStatus, setNameStatus] = useState<{ available: boolean; loading: boolean; error: string | null; suggestions?: string[] }>({ available: false, loading: false, error: null });
@@ -145,6 +150,28 @@ export default function SelectProfilePage() {
         setCreating(false);
     };
 
+    const handleDeleteClick = async (e: React.MouseEvent, profile: any) => {
+        e.stopPropagation();
+        setProfileToDelete(profile);
+        setVideoCount(0); // Reset
+        const count = await getProfileVideoCount(profile.id);
+        setVideoCount(count);
+    };
+
+    const confirmDelete = async () => {
+        if (!profileToDelete || !user) return;
+        setDeleting(true);
+        const res = await deleteProfile(profileToDelete.id, user.uid);
+        if (res.success) {
+            const pros = await getUserProfiles(user.uid);
+            setProfiles(pros);
+            setProfileToDelete(null);
+        } else {
+            alert(res.error);
+        }
+        setDeleting(false);
+    };
+
     const handleSelect = async (profileId: string) => {
         if (user) {
             await selectActiveProfile(profileId, user.uid);
@@ -207,7 +234,6 @@ export default function SelectProfilePage() {
 
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            {/* Background Effects */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full" />
 
@@ -217,16 +243,16 @@ export default function SelectProfilePage() {
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
-                {/* Profiles Display Grid */}
                 <div className="flex flex-wrap items-start justify-center gap-10 sm:gap-14 w-full">
-                    {/* Existing Profiles */}
                     {profiles.map((profile) => (
                         <div key={profile.id} className="group flex flex-col items-center gap-5 cursor-pointer max-w-[140px]">
                             <div
-                                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full p-[4px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-500 relative"
-                                onClick={() => handleSelect(profile.id)}
+                                className="w- 28 h-28 sm:w-36 sm:h-36 rounded-full p-[4px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-500 relative"
                             >
-                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 group-hover:border-black transition-all relative ring-1 ring-white/5">
+                                <div
+                                    className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 group-hover:border-black transition-all relative ring-1 ring-white/5"
+                                    onClick={() => handleSelect(profile.id)}
+                                >
                                     {profile.avatar ? (
                                         <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-500" />
                                     ) : (
@@ -235,12 +261,24 @@ export default function SelectProfilePage() {
                                         </div>
                                     )}
                                 </div>
-                                <button
-                                    className="absolute bottom-1 right-1 p-2 bg-zinc-800 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:scale-110 z-10 shadow-2xl"
-                                    onClick={(e) => handleEdit(e, profile.id)}
-                                >
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                </button>
+
+                                {/* Edit/Delete Controls Overlay - Show on hover */}
+                                <div className="absolute top-0 right-0 flex gap-1 -translate-y-2 translate-x-2 opacity-0 group-hover:opacity-100 transition-all z-20">
+                                    <button
+                                        title="Edit Avatar"
+                                        className="p-2 bg-zinc-800 rounded-full border border-white/10 hover:bg-zinc-700 hover:scale-110 shadow-2xl transition-all"
+                                        onClick={(e) => handleEdit(e, profile.id)}
+                                    >
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                    </button>
+                                    <button
+                                        title="Delete Profile"
+                                        className="p-2 bg-red-600/90 rounded-full border border-red-500/20 hover:bg-red-500 hover:scale-110 shadow-2xl transition-all"
+                                        onClick={(e) => handleDeleteClick(e, profile)}
+                                    >
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div className="flex flex-col items-center text-center w-full">
                                 <span className="text-zinc-400 font-bold text-lg sm:text-xl group-hover:text-white transition-colors capitalize truncate w-full">{profile.name}</span>
@@ -255,7 +293,6 @@ export default function SelectProfilePage() {
                         </div>
                     ))}
 
-                    {/* Add Profile Button */}
                     {profiles.length < 4 && (
                         <div className="group flex flex-col items-center gap-5 cursor-pointer" onClick={() => setShowCreate(true)}>
                             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-zinc-900/50 border-2 border-dashed border-zinc-700/50 flex items-center justify-center group-hover:border-white/20 group-hover:bg-zinc-800/80 transition-all duration-300">
@@ -282,7 +319,7 @@ export default function SelectProfilePage() {
                             <div className="flex justify-center">
                                 <label className="relative cursor-pointer group">
                                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center overflow-hidden shadow-2xl">
-                                        {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-10 h-10 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+                                        {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-10 h-10 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                                     </div>
                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} required />
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all">
@@ -342,7 +379,7 @@ export default function SelectProfilePage() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors font-black">Back</button>
+                                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">Back</button>
                                 <button
                                     type="submit"
                                     disabled={creating || nameStatus.loading || (newName.length > 0 && !nameStatus.available)}
@@ -352,6 +389,44 @@ export default function SelectProfilePage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {profileToDelete && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-4">
+                    <div className="bg-zinc-950 border border-white/5 p-8 sm:p-10 rounded-[48px] max-w-sm w-full text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-red-600"></div>
+                        <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                        <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter">Wait a moment!</h2>
+                        <p className="text-zinc-400 text-sm font-bold mb-8">
+                            Are you sure you wish to delete <span className="text-white">{profileToDelete.name}</span>?
+                            {videoCount > 0 ? (
+                                <span className="block mt-4 text-red-400 p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
+                                    This profile has <span className="font-black underline">{videoCount} uploaded videos</span>. Correcting this: if you delete, your uploads will be permanently removed. Please rethink this!
+                                </span>
+                            ) : (
+                                " This action cannot be undone."
+                            )}
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setProfileToDelete(null)}
+                                className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
+                            >
+                                Rethink
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={deleting}
+                                className="flex-1 h-14 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl disabled:opacity-50 active:scale-95"
+                            >
+                                {deleting ? 'Removing...' : 'Delete'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

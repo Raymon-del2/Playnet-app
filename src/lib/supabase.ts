@@ -144,3 +144,14 @@ export async function uploadThumbnail(file: File, path: string) {
 
     return urlData.publicUrl;
 }
+
+// Delete all videos for a channel
+export async function deleteChannelVideos(channelId: string) {
+    const { error } = await ensureSupabase()
+        .from('videos')
+        .delete()
+        .eq('channel_id', channelId);
+
+    if (error) throw error;
+    return { success: true };
+}
