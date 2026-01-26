@@ -28,7 +28,7 @@ export async function getUserProfiles(userId: string) {
 
 export async function createProfile(userId: string, name: string, avatarBase64: string, accountType: 'adult' | 'kids' | 'family') {
     try {
-        // Check profile count limit (3) via fast count query
+        // Check profile count limit (4) via fast count query
         const countResult = await turso.execute({
             sql: "SELECT COUNT(*) as count FROM channels WHERE user_id = ?",
             args: [userId]
@@ -36,8 +36,8 @@ export async function createProfile(userId: string, name: string, avatarBase64: 
 
         const count = countResult.rows[0]?.count as number || 0;
 
-        if (count >= 3) {
-            return { success: false, error: "Maximum of 3 profiles allowed." };
+        if (count >= 4) {
+            return { success: false, error: "Maximum of 4 profiles allowed." };
         }
 
         const channelId = `ch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -138,6 +138,36 @@ export async function getActiveProfile() {
     } catch (error) {
         console.error("Error fetching active profile:", error);
         return null;
+    }
+}
+
+export async function checkProfileName(name: string) {
+    if (!name.startsWith('@')) return { available: false, error: "Must start with @" };
+    if (name.length < 3) return { available: false, error: "Too short" };
+
+    try {
+        const result = await turso.execute({
+            sql: "SELECT id FROM channels WHERE LOWER(name) = LOWER(?)",
+            args: [name]
+        });
+
+        if (result.rows.length === 0) {
+            return { available: true };
+        }
+
+        // Generate suggestions
+        const base = name.replace(/[@]/g, '');
+        const suggestions = [
+            `@${base}${Math.floor(Math.random() * 99)}`,
+            `@${base}Official`,
+            `@TheReal${base}`,
+            `@iAm${base}`
+        ];
+
+        return { available: false, error: "Name taken", suggestions };
+    } catch (e) {
+        console.error("Check name error", e);
+        return { available: false, error: "Error checking name" };
     }
 }
 

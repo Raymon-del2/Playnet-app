@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getUserProfiles, createProfile, updateProfileAvatar, selectActiveProfile } from '@/app/actions/profile';
+import { getUserProfiles, createProfile, updateProfileAvatar, selectActiveProfile, checkProfileName } from '@/app/actions/profile';
 
 export default function SelectProfilePage() {
     const router = useRouter();
@@ -18,6 +18,10 @@ export default function SelectProfilePage() {
     const [newAvatar, setNewAvatar] = useState<string | null>(null);
     const [newAccountType, setNewAccountType] = useState<'adult' | 'kids' | 'family'>('adult');
     const [creating, setCreating] = useState(false);
+
+    // Name Checker State
+    const [nameStatus, setNameStatus] = useState<{ available: boolean; loading: boolean; error: string | null; suggestions?: string[] }>({ available: false, loading: false, error: null });
+    const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Edit Profile State
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -90,12 +94,39 @@ export default function SelectProfilePage() {
         }
     };
 
+    const handleNameChange = (val: string) => {
+        setNewName(val);
+        if (checkTimerRef.current) clearTimeout(checkTimerRef.current);
+
+        if (val.length < 2) {
+            setNameStatus({ available: false, loading: false, error: null });
+            return;
+        }
+
+        setNameStatus(prev => ({ ...prev, loading: true, error: null }));
+
+        checkTimerRef.current = setTimeout(async () => {
+            const res = await checkProfileName(val);
+            setNameStatus({
+                available: res.available,
+                loading: false,
+                error: res.error || null,
+                suggestions: res.suggestions
+            });
+        }, 500);
+    };
+
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user || !newName || !newAvatar) return;
 
         if (!newName.startsWith('@')) {
             alert("Profile name must start with @");
+            return;
+        }
+
+        if (!nameStatus.available) {
+            alert(nameStatus.error || "Name is not available");
             return;
         }
 
@@ -107,6 +138,7 @@ export default function SelectProfilePage() {
             setShowCreate(false);
             setNewName('');
             setNewAvatar(null);
+            setNameStatus({ available: false, loading: false, error: null });
         } else {
             alert(res.error);
         }
@@ -180,17 +212,17 @@ export default function SelectProfilePage() {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
 
-            <div className="max-w-4xl w-full flex flex-col items-center animate-slide-in-up z-10">
+            <div className="max-w-5xl w-full flex flex-col items-center animate-slide-in-up z-10">
                 <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Who is watching?</h1>
-                <p className="text-zinc-500 font-bold mb-12 uppercase tracking-widest text-sm">Select your identity</p>
+                <p className="text-zinc-500 font-bold mb-12 uppercase tracking-widest text-sm">You can have up to 4 profiles</p>
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
-                <div className="flex flex-wrap justify-center gap-8 mb-12 sm:mb-16">
+                <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-12 sm:mb-16">
                     {profiles.map((profile) => (
                         <div key={profile.id} className="group relative flex flex-col items-center gap-4 cursor-pointer">
                             <div
-                                className="w-32 h-32 rounded-full p-[3px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300 relative"
+                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-[3px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300 relative"
                                 onClick={() => handleSelect(profile.id)}
                             >
                                 <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-black transition-all relative">
@@ -223,9 +255,9 @@ export default function SelectProfilePage() {
                         </div>
                     ))}
 
-                    {profiles.length < 3 && (
+                    {profiles.length < 4 && (
                         <div className="group flex flex-col items-center gap-4 cursor-pointer" onClick={() => setShowCreate(true)}>
-                            <div className="w-32 h-32 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center group-hover:bg-zinc-800 group-hover:scale-105 transition-all duration-300 shadow-xl">
+                            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center group-hover:bg-zinc-800 group-hover:scale-105 transition-all duration-300 shadow-xl">
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                                     <svg className="w-8 h-8 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 </div>
@@ -243,7 +275,7 @@ export default function SelectProfilePage() {
                                 <div className="flex justify-center">
                                     <label className="relative cursor-pointer group">
                                         <div className="w-24 h-24 rounded-full bg-zinc-800 overflow-hidden border border-white/10 flex items-center justify-center">
-                                            {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+                                            {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                                         </div>
                                         <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} required />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 rounded-full transition-opacity">
@@ -254,10 +286,38 @@ export default function SelectProfilePage() {
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1 flex justify-between">
-                                        <span>Profile Name</span>
-                                        <span className="text-blue-400">Must start with @</span>
+                                        <span>Profile Handle</span>
+                                        <span className={`text-[9px] ${nameStatus.error ? 'text-red-400' : 'text-blue-400'}`}>
+                                            {nameStatus.loading ? 'Checking...' : nameStatus.error || 'Starting with @'}
+                                        </span>
                                     </label>
-                                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="@username" className="w-full h-12 bg-black border border-white/10 rounded-2xl px-4 text-white text-sm font-bold focus:border-white/30 transition-colors outline-none" required />
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => handleNameChange(e.target.value)}
+                                        placeholder="@username"
+                                        className={`w-full h-12 bg-black border rounded-2xl px-4 text-white text-sm font-bold focus:border-white/30 transition-colors outline-none ${nameStatus.available ? 'border-green-500/50' :
+                                                nameStatus.error ? 'border-red-500/50' : 'border-white/10'
+                                            }`}
+                                        required
+                                    />
+
+                                    {/* Handle Recommendations */}
+                                    {nameStatus.suggestions && nameStatus.suggestions.length > 0 && (
+                                        <div className="pt-2 flex flex-wrap gap-2">
+                                            <p className="w-full text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Try these:</p>
+                                            {nameStatus.suggestions.map(s => (
+                                                <button
+                                                    key={s}
+                                                    type="button"
+                                                    onClick={() => handleNameChange(s)}
+                                                    className="px-2.5 py-1 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-zinc-400 hover:bg-white/10 hover:text-white transition-all"
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-3">
@@ -274,16 +334,17 @@ export default function SelectProfilePage() {
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-zinc-500 px-1 leading-relaxed">
-                                        {newAccountType === 'kids' ? 'Safe content for children under 13.' :
-                                            newAccountType === 'family' ? 'Mixed content for all age groups.' :
-                                                'Full access to all high-fidelity entertainment.'}
-                                    </p>
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
                                     <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-sm transition-colors">Cancel</button>
-                                    <button type="submit" disabled={creating} className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-colors disabled:opacity-50">{creating ? 'Creating...' : 'Create'}</button>
+                                    <button
+                                        type="submit"
+                                        disabled={creating || nameStatus.loading || (newName.length > 0 && !nameStatus.available)}
+                                        className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-colors disabled:opacity-50"
+                                    >
+                                        {creating ? 'Creating...' : 'Create'}
+                                    </button>
                                 </div>
                             </form>
                         </div>
