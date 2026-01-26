@@ -17,7 +17,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
   const mainItems = [
     { icon: 'home', label: 'Home', path: '/' },
-    { icon: 'styles', label: 'Shorts', path: '/styles' },
+    { icon: 'styles', label: 'Style', path: '/styles' },
     { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
 

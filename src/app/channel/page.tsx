@@ -3,24 +3,44 @@
 import { useState, useEffect } from 'react';
 import { getActiveProfile } from '@/app/actions/profile';
 import Link from 'next/link';
+import { supabase, Video } from '@/lib/supabase';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function ChannelPage() {
     const [activeProfile, setActiveProfile] = useState<any>(null);
+    const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Home');
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             const profile = await getActiveProfile();
             setActiveProfile(profile);
+
+            if (profile) {
+                // Fetch videos for this channel
+                // NOTE: If RLS is enabled in Supabase, ensure you have a "Select" policy 
+                // that allows public (anon) access to the 'videos' table.
+                const { data, error } = await supabase!
+                    .from('videos')
+                    .select('*')
+                    .eq('channel_id', profile.id)
+                    .order('created_at', { ascending: false });
+
+                if (data) {
+                    setVideos(data);
+                } else if (error) {
+                    console.error('Error fetching channel videos:', error);
+                }
+            }
             setLoading(false);
         };
-        fetchProfile();
+        fetchData();
     }, []);
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex items-center justify-center min-h-[60vh] bg-black text-white">
                 <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
             </div>
         );
@@ -28,7 +48,7 @@ export default function ChannelPage() {
 
     if (!activeProfile) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-black text-white">
                 <h1 className="text-2xl font-bold">No active profile selected</h1>
                 <Link href="/select-profile" className="px-6 py-2 bg-white text-black rounded-full font-bold">
                     Select Profile
@@ -37,7 +57,7 @@ export default function ChannelPage() {
         );
     }
 
-    const handle = `@${activeProfile.name.replace(/\s+/g, '')}-g8j`; // Emulating the handle style in image
+    const handle = `@${activeProfile.name.replace(/\s+/g, '')}-g8j`;
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -63,7 +83,7 @@ export default function ChannelPage() {
                             <span>•</span>
                             <span>No subscribers</span>
                             <span>•</span>
-                            <span>No videos</span>
+                            <span>{videos.length} videos</span>
                         </div>
 
                         <div className="text-[14px] text-zinc-400 mb-6 max-w-2xl group cursor-pointer">
@@ -71,11 +91,13 @@ export default function ChannelPage() {
                         </div>
 
                         <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                            <Link href="/studio/content">
+                                <button className="h-9 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-bold transition-colors">
+                                    Manage videos
+                                </button>
+                            </Link>
                             <button className="h-9 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-bold transition-colors">
                                 Customize channel
-                            </button>
-                            <button className="h-9 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-bold transition-colors">
-                                Manage videos
                             </button>
                         </div>
                     </div>
@@ -97,59 +119,68 @@ export default function ChannelPage() {
                                 )}
                             </button>
                         ))}
-                        <button className="pb-3 text-zinc-400 hover:text-white transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
 
                 {/* Content Area */}
-                <div className="py-12 flex flex-col items-center text-center">
-                    {/* Empty State Illustration */}
-                    <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-white/5 rounded-full blur-3xl" />
-
-                        {/* Star Section */}
-                        <div className="absolute -top-4 -right-2 text-zinc-600 animate-pulse">
-                            <svg className="w-12 h-12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2l2.4 7.4h7.8l-6.3 4.6 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.3-4.6h7.8z" />
-                            </svg>
-                        </div>
-
-                        {/* Clapboard Section */}
-                        <div className="relative transform rotate-[-12deg]">
-                            <div className="w-24 h-20 bg-zinc-800 rounded-lg relative overflow-hidden border border-zinc-700 shadow-2xl">
-                                {/* Clapboard stripes top */}
-                                <div className="h-6 bg-zinc-900 flex -space-x-1">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <div key={i} className="w-6 h-full bg-teal-400 transform skew-x-[30deg] -translate-x-2" />
-                                    ))}
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-8 h-8 rounded-full bg-zinc-700/50 flex items-center justify-center">
-                                        <div className="w-0 h-0 border-l-[8px] border-l-white border-y-[6px] border-y-transparent ml-1" />
-                                    </div>
-                                </div>
+                <div className="py-8">
+                    {/* Home Tab Content */}
+                    {activeTab === 'Home' && (
+                        videos.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
+                                {videos.map((video) => (
+                                    <Link key={video.id} href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex flex-col gap-2 group">
+                                        <div className={`relative bg-zinc-800 rounded-xl overflow-hidden ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-lg border border-white/5`}>
+                                            <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
+                                            {video.duration && !video.is_short && (
+                                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                                    {video.duration}
+                                                </div>
+                                            )}
+                                            {video.is_short && (
+                                                <div className="absolute bottom-2 right-2 flex items-center gap-1">
+                                                    <img src="/styles-icon.svg?v=white" className="w-4 h-4 drop-shadow-md" alt="" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <h3 className="text-white font-bold text-[14px] leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
+                                                {video.title}
+                                            </h3>
+                                            <div className="text-zinc-400 text-[12px] font-medium flex items-center gap-1">
+                                                <span>{video.views} views</span>
+                                                <span>•</span>
+                                                <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex flex-col items-center text-center py-20">
+                                <div className="w-32 h-32 bg-zinc-900 rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-2xl">
+                                    <svg className="w-12 h-12 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Upload a video to get started</h3>
+                                <p className="text-zinc-400 mb-8 max-w-sm leading-relaxed text-sm">
+                                    Start sharing your story and connecting with viewers. Videos you upload will show up here.
+                                </p>
+                                <Link href="/studio/content">
+                                    <button className="bg-white hover:bg-zinc-200 text-black px-8 py-2.5 rounded-full font-bold text-sm transition-all active:scale-95 shadow-lg">
+                                        Create Video
+                                    </button>
+                                </Link>
+                            </div>
+                        )
+                    )}
 
-                        {/* Bottom decorative squiggle */}
-                        <div className="absolute -bottom-2 text-zinc-700">
-                            <svg className="w-16 h-4" viewBox="0 0 64 16" fill="none" stroke="currentColor" strokeWidth={3}>
-                                <path d="M0 8q8-8 16 0t16 0 16 0 16 0" strokeLinecap="round" />
-                            </svg>
+                    {activeTab !== 'Home' && (
+                        <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
+                            <p className="font-medium">This tab is empty</p>
                         </div>
-                    </div>
-
-                    <h2 className="text-[18px] font-bold mb-2">Create content on any device</h2>
-                    <p className="text-[14px] text-zinc-400 max-w-xs mb-8">
-                        Upload and record at home or on the go. Everything you make public will appear here.
-                    </p>
-                    <button className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm hover:bg-zinc-200 transition-colors">
-                        Create
-                    </button>
+                    )}
                 </div>
             </div>
         </div>

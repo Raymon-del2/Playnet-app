@@ -14,7 +14,7 @@ export default function MobileNav({
 
     const navItems = [
         { icon: 'home', label: 'Home', path: '/' },
-        { icon: 'shorts', label: 'Shorts', path: '/styles' },
+        { icon: 'shorts', label: 'Style', path: '/styles' },
         { icon: 'create', label: '', path: '/create', isAction: true },
         { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions' },
         { icon: 'you', label: 'You', path: '/library' },

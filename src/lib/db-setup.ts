@@ -77,6 +77,7 @@ export async function initDatabase() {
         `);
 
         // Video Views Table
+        // Video Views Table
         await turso.execute(`
             CREATE TABLE IF NOT EXISTS video_views (
                 id TEXT PRIMARY KEY,
@@ -87,6 +88,19 @@ export async function initDatabase() {
                 FOREIGN KEY (video_id) REFERENCES videos(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
+        `);
+
+        // Subscriptions Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS subscriptions(
+            id TEXT PRIMARY KEY,
+            subscriber_id TEXT NOT NULL, --Profile ID of the subber
+                channel_id TEXT NOT NULL, --Profile ID of the target
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(subscriber_id) REFERENCES channels(id),
+            FOREIGN KEY(channel_id) REFERENCES channels(id),
+            UNIQUE(subscriber_id, channel_id)
+        );
         `);
 
         console.log("Turso tables initialized successfully.");

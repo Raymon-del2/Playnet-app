@@ -132,11 +132,9 @@ export default function HistoryPage() {
                             {/* Special handling for Shorts if grouped by date section */}
                             {groupedHistory[label].some((i: any) => i.type === 'short') && (
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2 text-red-500 font-black italic uppercase text-lg">
-                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6H17.65c-.79 2.47-3.1 4.2-5.65 4.2-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78l-2.72 2.72h7V2l-2.5 2.5z" />
-                                        </svg>
-                                        Styles
+                                    <div className="flex items-center gap-2 font-black uppercase text-lg">
+                                        <img src="/styles-icon.svg?v=blue" alt="Styles" className="w-6 h-6 object-contain" />
+                                        <span className="text-white">Styles</span>
                                     </div>
                                     <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                                         {groupedHistory[label]
