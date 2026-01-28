@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, use } from 'react';
 import Link from 'next/link';
 import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video, updateChannelAvatarInVideos } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -9,7 +9,8 @@ import Comments from '@/components/Comments';
 import RelatedVideos from '@/components/RelatedVideos';
 import SubscribeButton from '@/components/SubscribeButton';
 
-export default function WatchPage({ params }: { params: { id: string } }) {
+export default function WatchPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: watchId } = use(params);
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [likes, setLikes] = useState(12500);
@@ -100,7 +101,7 @@ export default function WatchPage({ params }: { params: { id: string } }) {
         setActiveProfileName(profile?.name ?? '');
         setActiveProfileAvatar(profile?.avatar ?? '');
 
-        const data = await getVideoById(params.id);
+        const data = await getVideoById(watchId);
         if (data) {
           const merged =
             profile?.id && profile.avatar && data.channel_id === profile.id
@@ -156,12 +157,12 @@ export default function WatchPage({ params }: { params: { id: string } }) {
       }
     };
 
-    if (params.id.length > 5) { // Simple check for UUID
+    if (watchId.length > 5) { // Simple check for UUID
       fetchVideo();
     } else {
       setIsLoading(false);
     }
-  }, [params.id]);
+  }, [watchId]);
 
   const refreshSaveStatus = async (vId: string, profileId: string) => {
     setSaveLoading(true);
@@ -458,8 +459,8 @@ export default function WatchPage({ params }: { params: { id: string } }) {
               <button
                 onClick={() => setIsSaveOpen(true)}
                 className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-all active:scale-95 border border-white/5 font-semibold text-sm ${isSavedAnywhere
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 hover:bg-white/15 text-white'
+                  ? 'bg-white text-black'
+                  : 'bg-white/10 hover:bg-white/15 text-white'
                   }`}
               >
                 <svg className="w-5 h-5" fill={isSavedAnywhere ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>
@@ -483,7 +484,7 @@ export default function WatchPage({ params }: { params: { id: string } }) {
         {/* Comments Section */}
         <div className="px-4 sm:px-0 mt-6">
           <Comments
-            videoId={params.id}
+            videoId={watchId}
             profileId={activeProfileId}
             profileName={activeProfileName}
             profileAvatar={activeProfileAvatar}
@@ -494,7 +495,7 @@ export default function WatchPage({ params }: { params: { id: string } }) {
       {/* Related Videos Sidebar */}
       <div className="lg:w-96 px-4 sm:px-0">
         <RelatedVideos
-          videoId={params.id}
+          videoId={watchId}
           category={video?.category}
           channelId={video?.channel_id}
         />

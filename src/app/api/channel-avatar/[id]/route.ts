@@ -4,9 +4,9 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const channelId = params.id;
+  const { id: channelId } = await params;
   if (!channelId) {
     return NextResponse.json({ error: 'channel_id required' }, { status: 400 });
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getActiveProfile } from '@/app/actions/profile';
@@ -18,7 +18,8 @@ type ChannelRecord = {
   created_at?: string;
 };
 
-export default function ChannelView({ params }: { params: { id: string } }) {
+export default function ChannelView({ params }: { params: Promise<{ id: string }> }) {
+  const { id: channelId } = use(params);
   const router = useRouter();
   const [channel, setChannel] = useState<ChannelRecord | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -29,7 +30,7 @@ export default function ChannelView({ params }: { params: { id: string } }) {
   const [isOwner, setIsOwner] = useState(false);
   const [savingBanner, setSavingBanner] = useState(false);
 
-  const channelId = params.id;
+
 
   const handle = useMemo(() => {
     if (!channel?.name) return '';

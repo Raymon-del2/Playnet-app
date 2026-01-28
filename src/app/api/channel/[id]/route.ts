@@ -14,9 +14,9 @@ async function ensureBannerColumn() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const channelId = params.id;
+  const { id: channelId } = await params;
   if (!channelId) {
     return NextResponse.json({ error: 'channel id required' }, { status: 400 });
   }
@@ -39,9 +39,9 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const channelId = params.id;
+  const { id: channelId } = await params;
   if (!channelId) {
     return NextResponse.json({ error: 'channel id required' }, { status: 400 });
   }
