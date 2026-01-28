@@ -1,45 +1,93 @@
 {
+    "id": "com.playra.app.v1",
     "name": "Playra",
     "short_name": "Playra",
-    "description": "Watch and share videos - The next generation video platform",
+    "description": "The next generation video platform. Watch, share, and subscribe to your favorite creators.",
     "start_url": "/",
     "display": "standalone",
+    "display_override": [
+        "window-controls-overlay",
+        "standalone",
+        "minimal-ui"
+    ],
     "background_color": "#0a0a0a",
     "theme_color": "#0a0a0a",
     "orientation": "any",
+    "lang": "en-US",
+    "dir": "ltr",
+    "categories": [
+        "entertainment",
+        "video",
+        "social"
+    ],
     "icons": [
         {
-            "src": "/Playra.png",
-            "sizes": "192x192",
+            "src": "/icon-96x96.png",
+            "sizes": "96x96",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
-            "src": "/Playra.png",
+            "src": "/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-maskable-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ],
     "screenshots": [
         {
-            "src": "/Playra.png",
+            "src": "/icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "form_factor": "wide"
+            "form_factor": "wide",
+            "label": "Playra Home Screen (Wide)"
+        },
+        {
+            "src": "/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Playra Home Screen (Mobile)"
         }
-    ],
-    "categories": [
-        "entertainment",
-        "video"
     ],
     "shortcuts": [
         {
             "name": "Trending",
             "url": "/trending",
+            "description": "View what's trending right now",
             "icons": [
                 {
-                    "src": "/Playra.png",
+                    "src": "/icon-96x96.png",
                     "sizes": "96x96"
                 }
             ]
@@ -47,12 +95,17 @@
         {
             "name": "Subscriptions",
             "url": "/subscriptions",
+            "description": "View videos from channels you follow",
             "icons": [
                 {
-                    "src": "/Playra.png",
+                    "src": "/icon-96x96.png",
                     "sizes": "96x96"
                 }
             ]
         }
-    ]
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "iarc_rating_id": "e84c078a-c63e-4217-b08e-8a299as721",
+    "scope": "/"
 }
