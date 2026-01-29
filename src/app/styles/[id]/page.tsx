@@ -22,6 +22,17 @@ const shareApps = [
   { label: 'More', color: 'bg-[#f97316]', text: '>' },
 ];
 
+const VIDEO_FILTERS = [
+  { id: 'none', name: 'Original', class: 'style-none' },
+  { id: 'cinema', name: 'Cinema', class: 'style-cinema' },
+  { id: 'retro', name: 'Retro', class: 'style-retro' },
+  { id: 'neon', name: 'Neon', class: 'style-neon' },
+  { id: 'noir', name: 'Noir', class: 'style-noir' },
+  { id: 'dreamy', name: 'Dreamy', class: 'style-dreamy' },
+  { id: 'warm', name: 'Warm', class: 'style-warm' },
+  { id: 'vibrant', name: 'Vibrant', class: 'style-vibrant' },
+];
+
 export default function StylesDetailPage() {
   const params = useParams();
   const styleId = Array.isArray(params?.id) ? params.id[0] : params?.id;
@@ -40,6 +51,8 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
   const [shareCopied, setShareCopied] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [activeFilterIndex, setActiveFilterIndex] = useState(0);
+  const [showFilterToast, setShowFilterToast] = useState(false);
 
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -200,6 +213,18 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     setTimeout(() => setShareCopied(false), 2000);
   };
 
+  const cycleFilter = () => {
+    setActiveFilterIndex((prev) => (prev + 1) % VIDEO_FILTERS.length);
+    setShowFilterToast(true);
+  };
+
+  useEffect(() => {
+    if (showFilterToast) {
+      const timer = setTimeout(() => setShowFilterToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showFilterToast]);
+
   if (isLoading && clips.length === 0) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
@@ -213,6 +238,15 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
   return (
     <div className="h-[100dvh] bg-black overflow-hidden relative">
+      {/* Filter Toast Indicator */}
+      <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[200] transition-all duration-500 pointer-events-none ${showFilterToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95'}`}>
+        <div className="bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 shadow-[0_0_30px_rgba(37,99,235,0.3)]">
+          <span className="text-white font-black text-xs uppercase tracking-[0.2em] drop-shadow-md">
+            Style: {VIDEO_FILTERS[activeFilterIndex].name}
+          </span>
+        </div>
+      </div>
+
       <div
         className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth styles-scrollbar-hide"
         onScroll={handleScroll}
@@ -227,7 +261,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
               <video
                 ref={el => { videoRefs.current[index] = el; }}
                 src={clip.video_url}
-                className="h-full w-full object-cover"
+                className={`h-full w-full object-cover transition-all duration-500 ${VIDEO_FILTERS[activeFilterIndex].class}`}
                 loop
                 playsInline
                 muted={isMuted}
@@ -327,6 +361,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
                   <div className="flex flex-col items-center gap-1">
                     <button
+                      onClick={cycleFilter}
                       className="p-3.5 rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 backdrop-blur-xl border border-white/20 text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] animate-pulse"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
