@@ -53,7 +53,7 @@ export default function MobileNav({
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-slide-in-up">
-            <nav className="w-full bg-[#0f0f0f] border-t border-[#2a2a2a] h-[60px] grid grid-cols-5 px-0 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <nav className="w-full bg-[#0f0f0f] border-t border-[#2a2a2a] h-[60px] flex items-center justify-around px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -62,16 +62,19 @@ export default function MobileNav({
                             href={item.path}
                             onClick={(e) => {
                                 if (isActive && item.path === '/') {
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    const scrollContainer = document.querySelector('.main-content-area');
+                                    if (scrollContainer) {
+                                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }
                                 }
                             }}
-                            className="flex flex-col items-center justify-center h-full active:scale-95 transition-transform"
+                            className="flex flex-col items-center justify-center flex-1 min-w-0 h-full active:scale-95 transition-transform"
                         >
                             <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors mb-0.5`}>
                                 {getIcon(item)}
                             </span>
                             {item.label && (
-                                <span className={`text-[9px] font-black uppercase tracking-tight truncate w-full px-1 text-center transition-colors ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`}>
+                                <span className={`text-[10px] font-medium uppercase tracking-tight truncate w-full px-1 text-center transition-colors ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`}>
                                     {item.label}
                                 </span>
                             )}

@@ -41,13 +41,13 @@
 
 html,
 body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+  width: 100vw;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
   background: #0f0f0f !important;
   margin: 0;
   padding: 0;
-  position: relative;
 }
 
 body {
@@ -55,6 +55,23 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* App-like scrolling for the main content */
+.main-content-area {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 80px;
+  /* Room for mobile nav */
+}
+
+@media (min-width: 1024px) {
+  .main-content-area {
+    padding-bottom: 0;
+  }
 }
 
 html.styles-scrollbar-hidden,
