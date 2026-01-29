@@ -201,11 +201,18 @@ function VideoCard({
         </Link>
 
         <div className="flex flex-1 flex-col min-w-0">
-          <Link href={`/watch/${video.id}`} className="w-full">
-            <h3 className="font-bold text-white text-[15px] leading-tight line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
-              {video.title}
-            </h3>
-          </Link>
+          <div className="flex justify-between items-start gap-2">
+            <Link href={`/watch/${video.id}`} className="flex-1 min-w-0">
+              <h3 className="font-bold text-white text-[15px] leading-[1.2] line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
+                {video.title}
+              </h3>
+            </Link>
+            <button className="p-1.5 -mr-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all active:scale-90">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </button>
+          </div>
           <div className="flex flex-wrap items-center text-[12px] text-zinc-400 font-medium gap-x-1.5">
             <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
               {video.channel_name}
