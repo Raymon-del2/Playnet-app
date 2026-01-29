@@ -191,7 +191,7 @@ function VideoCard({
 
       <div className="flex gap-3 px-3 py-3 md:px-0">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0 mt-0.5">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
+          <div className="w-[36px] h-[36px] rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
             <img
               src={video.channel_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'}
               alt={video.channel_name}
@@ -213,7 +213,7 @@ function VideoCard({
               </svg>
             </button>
           </div>
-          <div className="flex flex-wrap items-center text-[12px] text-zinc-400 font-medium gap-x-1.5">
+          <div className="flex flex-wrap items-center text-[12px] text-[#aaaaaa] font-medium gap-x-1.5">
             <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
               {video.channel_name}
             </Link>
@@ -430,9 +430,9 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-20">
+    <div className="min-h-screen bg-[#0f0f0f] pb-20">
       {/* Category Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 sticky top-14 sm:top-16 bg-gray-900/95 backdrop-blur-md z-40 scrollbar-hide">
+      <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 sticky top-16 bg-[#0f0f0f]/95 backdrop-blur-md z-40 scrollbar-hide">
         {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
           <button
             key={cat}

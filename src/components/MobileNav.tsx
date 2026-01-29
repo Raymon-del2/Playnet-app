@@ -53,7 +53,7 @@ export default function MobileNav({
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-slide-in-up">
-            <nav className="w-full bg-[#0f0f0f]/95 backdrop-blur-xl border-t border-white/5 h-[64px] flex items-center justify-around px-0 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <nav className="w-full bg-[#0f0f0f]/95 backdrop-blur-xl border-t border-[#2a2a2a] h-[60px] flex items-center justify-around px-0 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -67,11 +67,11 @@ export default function MobileNav({
                             }}
                             className="flex flex-col items-center justify-center flex-1 h-full active:scale-95 transition-transform"
                         >
-                            <span className={`${isActive ? 'text-white' : 'text-zinc-400'} transition-colors mb-1`}>
+                            <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors mb-0.5`}>
                                 {getIcon(item)}
                             </span>
                             {item.label && (
-                                <span className={`text-[10px] font-medium tracking-tight truncate w-full text-center transition-colors ${isActive ? 'text-white' : 'text-zinc-500'}`}>
+                                <span className={`text-[10px] font-medium tracking-tight truncate w-full text-center transition-colors ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`}>
                                     {item.label}
                                 </span>
                             )}

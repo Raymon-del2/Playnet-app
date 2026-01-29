@@ -39,11 +39,11 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" href="/icon-192x192.png" sizes="192x192" />
         <link rel="shortcut icon" href="/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <meta name="theme-color" content="#0f0f0f" />
       </head>
-      <body className="bg-gray-900 text-white selection:bg-red-500/30">
+      <body className="bg-[#0f0f0f] text-white selection:bg-blue-500/30">
         <LayoutShell activeProfile={activeProfile}>{children}</LayoutShell>
       </body>
     </html>
   );
 }
-

@@ -170,13 +170,13 @@ export default function Navbar({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5 z-50 flex items-center">
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-[#0f0f0f] border-b border-white/5 z-50 flex items-center">
       {/* Progress line */}
       {isSearching && (
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
       )}
       <div className="w-full px-4">
-        <div className="flex items-center justify-between h-14 gap-2">
+        <div className="flex items-center justify-between h-16 gap-2">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={onToggleSidebar}
@@ -187,7 +187,7 @@ export default function Navbar({
 
             <Link href="/" className="flex items-center gap-1.5">
               <div className="relative flex items-center">
-                <img src="/Playra.png" alt="Playra" className="h-[22px] sm:h-[24px] w-auto" />
+                <img src="/Playra.png" alt="Playra" className="h-[28px] w-auto" />
               </div>
               <span className="hidden xs:inline text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded">
                 {countryCode || 'KE'}
