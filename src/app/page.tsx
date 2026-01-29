@@ -428,7 +428,7 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20 w-full">
+    <>
       {/* Category Bar */}
       <div className="flex items-center gap-3 overflow-x-auto px-4 py-2 sticky top-14 z-40 scrollbar-hide border-b border-white/5 mb-4 w-full" style={{ backgroundColor: '#0f0f0f' }}>
         {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
@@ -536,6 +536,6 @@ export default function Home() {
           );
         })()
       )}
-    </div>
+    </>
   );
 }
