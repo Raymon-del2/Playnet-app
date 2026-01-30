@@ -175,7 +175,7 @@ export default function SelectProfilePage() {
     const handleSelect = async (profileId: string) => {
         if (user) {
             await selectActiveProfile(profileId, user.uid);
-            router.push('/');
+            window.location.href = '/'; // Full reload to pick up cookie
         }
     };
 
@@ -283,9 +283,9 @@ export default function SelectProfilePage() {
                             <div className="flex flex-col items-center text-center w-full">
                                 <span className="text-zinc-400 font-bold text-lg sm:text-xl group-hover:text-white transition-colors capitalize truncate w-full">{profile.name}</span>
                                 <span className={`text-[10px] font-black uppercase tracking-tighter mt-1.5 px-2.5 py-1 rounded-md ${profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
-                                        profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
-                                            profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
-                                                'text-blue-400 bg-blue-400/10'
+                                    profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
+                                        profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
+                                            'text-blue-400 bg-blue-400/10'
                                     }`}>
                                     {profile.account_type || 'general'}
                                 </span>
@@ -341,7 +341,7 @@ export default function SelectProfilePage() {
                                     onChange={(e) => handleNameChange(e.target.value)}
                                     placeholder="@username"
                                     className={`w-full h-14 bg-white/5 border rounded-2xl px-5 text-white font-bold outline-none transition-all ${nameStatus.available ? 'border-green-500/30 bg-green-500/5' :
-                                            nameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-white/5'
+                                        nameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-white/5'
                                         }`}
                                     required
                                 />

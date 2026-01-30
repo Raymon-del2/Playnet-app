@@ -70,37 +70,44 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
     return icons[icon] || icons.home;
   };
 
-  const renderItem = (item: any) => (
-    <li key={item.path} className="relative group">
-      <Link
-        href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
-        onClick={(e) => {
-          if (item.comingSoon) {
-            e.preventDefault();
-          }
-        }}
-        className={`rounded-xl transition-all duration-200 ${isCollapsed
-          ? 'flex flex-col items-center gap-1.5 py-4'
-          : 'flex items-center space-x-5 px-3 py-2.5'
-          } ${pathname === item.path
-            ? 'bg-white/10 text-white font-bold'
-            : 'text-gray-300 hover:bg-white/5 hover:text-white'
-          }`}
-      >
-        <span className={`${pathname === item.path ? 'text-white' : 'text-gray-400'} transition-colors`}>
-          {getIcon(item.icon)}
-        </span>
-        <span className={`${isCollapsed ? 'text-[10px]' : 'text-[14px]'} truncate`}>{item.label}</span>
-      </Link>
-      {item.comingSoon && (
-        <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-          <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
-            Coming soon
+  const renderItem = (item: any) => {
+    const isActive = pathname === item.path;
+    return (
+      <li key={item.path} suppressHydrationWarning className="relative group list-none w-full">
+        <Link
+          suppressHydrationWarning
+          href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
+          onClick={(e) => {
+            if (item.comingSoon) e.preventDefault();
+          }}
+          className={`w-full transition-all duration-200 outline-none flex ${isCollapsed
+            ? 'flex-col items-center justify-center py-4 px-0'
+            : 'items-center space-x-5 px-3 py-2.5 rounded-xl'
+            } ${isActive
+              ? 'bg-white/10 text-white font-bold'
+              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+            }`}
+        >
+          <div suppressHydrationWarning className={`flex items-center justify-center transition-colors w-6 h-6 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+            {getIcon(item.icon)}
           </div>
-        </div>
-      )}
-    </li>
-  );
+          <span
+            suppressHydrationWarning
+            className={`truncate transition-all duration-200 ${isCollapsed ? 'text-[10px] w-full text-center px-1 mt-1' : 'text-[14px]'}`}
+          >
+            {item.label}
+          </span>
+        </Link>
+        {item.comingSoon && (
+          <div suppressHydrationWarning className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+            <div suppressHydrationWarning className="bg-[#1f1f1f] text-white text-xs font-semibold px-2 py-1 rounded shadow-xl whitespace-nowrap border border-white/10">
+              Coming soon
+            </div>
+          </div>
+        )}
+      </li>
+    );
+  };
 
   const ComingSoonLink = ({ label }: { label: string }) => (
     <span className="relative group inline-block">
@@ -111,8 +118,8 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
       >
         {label}
       </a>
-      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-        <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+      <div suppressHydrationWarning className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <div suppressHydrationWarning className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
           Coming soon
         </div>
       </div>
@@ -121,11 +128,12 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-64px)] bg-gray-900 overflow-y-auto hidden lg:block transition-all duration-300 border-r border-white/5 scrollbar-hide ${isCollapsed ? 'w-20' : 'w-64'
+      suppressHydrationWarning
+      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#0f0f0f] overflow-y-auto hidden lg:block transition-all duration-300 border-r border-white/5 scrollbar-hide z-40 ${isCollapsed ? 'w-20' : 'w-64'
         }`}
     >
-      <div className={`py-3 ${isCollapsed ? 'px-1' : 'px-3'}`}>
-        <ul className="space-y-0.5 mb-3">
+      <div suppressHydrationWarning className={`py-2 w-full ${isCollapsed ? 'px-0' : 'px-3'}`}>
+        <ul suppressHydrationWarning className="space-y-1 mb-3">
           {mainItems.map(renderItem)}
         </ul>
 
@@ -133,16 +141,16 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
           <>
             {isUserAuthenticated && (
               <>
-                <div className="h-px bg-white/10 my-3 mx-3" />
+                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 
-                <div className="flex items-center space-x-2 px-3 py-2 mb-1 group cursor-pointer hover:bg-white/5 rounded-xl transition-colors">
+                <div suppressHydrationWarning className="flex items-center space-x-2 px-3 py-2 mb-1 group cursor-pointer hover:bg-white/5 rounded-xl transition-colors">
                   <span className="text-[16px] font-bold text-white">You</span>
                   <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
 
-                <ul className="space-y-0.5">
+                <ul suppressHydrationWarning className="space-y-0.5">
                   {youItems.map(renderItem)}
                 </ul>
               </>
@@ -150,7 +158,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
             {!isUserAuthenticated && (
               <>
-                <div className="h-px bg-white/10 my-3 mx-3" />
+                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
                 <div className="px-6 py-4 bg-white/5 rounded-2xl mx-3 mb-4 border border-white/5">
                   <p className="text-[13px] text-gray-300 mb-4 leading-relaxed font-medium">
                     Sign in to like videos, comment, and subscribe.
@@ -168,23 +176,23 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
               </>
             )}
 
-            <div className="h-px bg-white/10 my-3 mx-3" />
+            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 
-            <div className="px-3 py-2">
+            <div suppressHydrationWarning className="px-3 py-2">
               <h3 className="text-[16px] font-bold text-white mb-1">Explore</h3>
             </div>
-            <ul className="space-y-0.5">
+            <ul suppressHydrationWarning className="space-y-0.5">
               {exploreItems.map(renderItem)}
             </ul>
 
-            <div className="h-px bg-white/10 my-3 mx-3" />
+            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 
-            <ul className="space-y-0.5 mb-6">
+            <ul suppressHydrationWarning className="space-y-0.5 mb-6">
               {bottomItems.map(renderItem)}
             </ul>
 
-            <div className="px-6 py-4 text-[12px] font-semibold text-gray-500 space-y-3">
-              <div className="flex flex-wrap gap-x-2 gap-y-1">
+            <div suppressHydrationWarning className="px-6 py-4 text-[12px] font-semibold text-gray-500 space-y-3">
+              <div suppressHydrationWarning className="flex flex-wrap gap-x-2 gap-y-1">
                 <ComingSoonLink label="About" />
                 <ComingSoonLink label="Press" />
                 <ComingSoonLink label="Copyright" />
@@ -193,14 +201,14 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                 <ComingSoonLink label="Advertise" />
                 <ComingSoonLink label="Developers" />
               </div>
-              <div className="flex flex-wrap gap-x-2 gap-y-1">
+              <div suppressHydrationWarning className="flex flex-wrap gap-x-2 gap-y-1">
                 <ComingSoonLink label="Terms" />
                 <ComingSoonLink label="Privacy" />
                 <ComingSoonLink label="Policy & Safety" />
                 <ComingSoonLink label="How Playra works" />
                 <ComingSoonLink label="Test new features" />
               </div>
-              <div className="pt-2 font-normal text-gray-600">
+              <div suppressHydrationWarning className="pt-2 font-normal text-gray-600">
                 © {new Date().getFullYear()} Codedwaves LLC
               </div>
             </div>

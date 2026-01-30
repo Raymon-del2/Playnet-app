@@ -54,11 +54,18 @@ function VideoCard({
   videoRef: (el: HTMLVideoElement | null) => void;
   profileId?: string | null;
 }) {
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const [computedDuration, setComputedDuration] = useState<string | null>(video.duration || null);
   const [durationSeconds, setDurationSeconds] = useState<number>(parseDurationToSeconds(video.duration));
   const [progressSeconds, setProgressSeconds] = useState<number>(0);
   const [hoverPct, setHoverPct] = useState<number | null>(null);
   const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
+
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const rawDur = e.currentTarget.duration;
@@ -106,37 +113,12 @@ function VideoCard({
 
   return (
     <div
+      suppressHydrationWarning
       className="group relative flex flex-col w-full bg-[#0f0f0f]"
       onMouseEnter={() => onHoverStart(video.id)}
       onMouseLeave={() => {
         setHoverPct(null);
         onHoverEnd(video.id);
-      }}
-      onMouseMove={(e) => {
-        if (!isPreviewing || !durationSeconds) return;
-        const rect = (e.currentTarget.querySelector('video') as HTMLVideoElement | null)?.getBoundingClientRect();
-        if (!rect) return;
-        const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-        setHoverPct(pct * 100);
-        const vidEl = (e.currentTarget.querySelector('video') as HTMLVideoElement | null);
-        if (vidEl) {
-          const target = pct * durationSeconds;
-          vidEl.currentTime = target;
-          setProgressSeconds(target);
-        }
-      }}
-      onMouseDown={(e) => {
-        if (!isPreviewing || !durationSeconds) return;
-        const rect = (e.currentTarget.querySelector('video') as HTMLVideoElement | null)?.getBoundingClientRect();
-        if (!rect) return;
-        const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-        const target = pct * durationSeconds;
-        const vidEl = (e.currentTarget.querySelector('video') as HTMLVideoElement | null);
-        if (vidEl) {
-          vidEl.currentTime = target;
-          setProgressSeconds(target);
-          persistProgress(target, durationSeconds);
-        }
       }}
     >
       <Link href={`/watch/${video.id}`} className="relative block w-full">
@@ -147,11 +129,25 @@ function VideoCard({
             className={`w-full h-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}
           />
           <video
-            ref={videoRef}
+            ref={(el) => {
+              localVideoRef.current = el;
+              videoRef(el);
+              if (el && isPreviewing) {
+                // Initialize to saved progress if available
+                const saved = localStorage.getItem(progressKey);
+                if (saved && el.currentTime === 0) {
+                  try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.current) el.currentTime = parsed.current;
+                  } catch (e) { }
+                }
+              }
+            }}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
             src={video.video_url}
             muted={isMuted}
             playsInline
+            loop
             onTimeUpdate={(e) => {
               const t = e.currentTarget.currentTime;
               setProgressSeconds(t);
@@ -159,15 +155,36 @@ function VideoCard({
               const effectiveDur = dur && Number.isFinite(dur) ? dur : 0;
               if (effectiveDur > 0) {
                 persistProgress(t, effectiveDur);
-                if (t >= effectiveDur - 0.05) {
-                  e.currentTarget.pause();
-                }
               }
             }}
             onLoadedMetadata={handleLoadedMetadata}
           />
-          <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-black px-1.5 py-0.5 rounded z-20">
+          <div className={`absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-black px-1.5 py-0.5 rounded z-20 transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}>
             {computedDuration || video.duration || '0:00'}
+          </div>
+
+          {/* YouTube-style Mute Button Overlay */}
+          <div
+            className={`absolute top-2 right-2 z-30 transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleMuted(video.id);
+              }}
+              className="bg-black/60 hover:bg-black/80 p-1.5 rounded-full text-white backdrop-blur-sm transition-all active:scale-90"
+            >
+              {isMuted ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM19 12c0 2.82-1.49 5.27-3.7 6.6l1.27 1.27C19.31 18.15 21 15.27 21 12s-1.69-6.15-4.43-7.87l-1.27 1.27c2.21 1.33 3.7 3.78 3.7 6.6zM3 9v6h4l5 5V4L7 9H3z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM19 12c0 2.82-1.49 5.27-3.7 6.6l1.27 1.27C19.31 18.15 21 15.27 21 12s-1.69-6.15-4.43-7.87l-1.27 1.27c2.21 1.33 3.7 3.78 3.7 6.6z" />
+                </svg>
+              )}
+            </button>
           </div>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
             <div
@@ -218,11 +235,60 @@ function VideoCard({
             <span className="mx-1">•</span>
             <span>{video.views.toLocaleString()} views</span>
             <span className="mx-1">•</span>
-            <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
+            <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function StyleCard({
+  style,
+  onHoverStart,
+  onHoverEnd,
+  videoRef,
+  isMuted
+}: {
+  style: Video;
+  onHoverStart: (id: string) => void;
+  onHoverEnd: (id: string) => void;
+  videoRef: (el: HTMLVideoElement | null) => void;
+  isMuted: boolean;
+}) {
+  const localRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (localRef.current) localRef.current.muted = isMuted;
+  }, [isMuted]);
+
+  return (
+    <Link
+      href={`/styles/${style.id}`}
+      className="flex-shrink-0 w-44 sm:w-52 group relative"
+      onMouseEnter={() => onHoverStart(style.id)}
+      onMouseLeave={() => onHoverEnd(style.id)}
+    >
+      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
+        <img src={style.thumbnail_url} className="w-full h-full object-cover" alt="" />
+        <video
+          ref={(el) => {
+            localRef.current = el;
+            videoRef(el);
+          }}
+          src={style.video_url}
+          muted={isMuted}
+          playsInline
+          loop
+          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4 group-hover:bottom-5 transition-all">
+          <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>
+          <p className="text-[11px] text-zinc-300 mt-2 font-bold shadow-black drop-shadow-sm">{style.views.toLocaleString()} views</p>
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -248,30 +314,14 @@ function StylesShelf({
 
       <div className="flex gap-4 overflow-x-auto px-4 sm:px-6 scrollbar-hide pb-4">
         {styles.map((style) => (
-          <Link
+          <StyleCard
             key={style.id}
-            href={`/styles/${style.id}`}
-            className="flex-shrink-0 w-44 sm:w-52 group relative"
-            onMouseEnter={() => onHoverStart(style.id)}
-            onMouseLeave={() => onHoverEnd(style.id)}
-          >
-            <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
-              <img src={style.thumbnail_url} className="w-full h-full object-cover" alt="" />
-              <video
-                ref={(el) => { videoRefs.current[style.id] = el; }}
-                src={style.video_url}
-                muted={isMuted}
-                playsInline
-                loop
-                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 group-hover:bottom-5 transition-all">
-                <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>
-                <p className="text-[11px] text-zinc-300 mt-2 font-bold shadow-black drop-shadow-sm">{style.views.toLocaleString()} views</p>
-              </div>
-            </div>
-          </Link>
+            style={style}
+            onHoverStart={onHoverStart}
+            onHoverEnd={onHoverEnd}
+            videoRef={(el) => { videoRefs.current[style.id] = el; }}
+            isMuted={isMuted}
+          />
         ))}
       </div>
     </div>
@@ -391,10 +441,9 @@ export default function Home() {
       setPreviewingId(id);
       const videoEl = videoRefs.current[id];
       if (videoEl) {
-        videoEl.currentTime = 0;
         videoEl.play().catch(() => { });
       }
-    }, 800);
+    }, 400);
   };
 
   const handleHoverEnd = (id: string) => {
@@ -406,20 +455,19 @@ export default function Home() {
     const videoEl = videoRefs.current[id];
     if (videoEl) {
       videoEl.pause();
-      videoEl.currentTime = 0;
     }
   };
 
   const renderSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8 p-4">
+    <div suppressHydrationWarning className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8 p-4">
       {SKELETON_BATCH.map((_, i) => (
-        <div key={i} className="animate-pulse space-y-3">
-          <div className="aspect-video bg-zinc-800 rounded-xl" />
-          <div className="flex gap-3">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-zinc-800 rounded w-3/4" />
-              <div className="h-3 bg-zinc-800 rounded w-1/2" />
+        <div suppressHydrationWarning key={i} className="animate-pulse space-y-3">
+          <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl" />
+          <div suppressHydrationWarning className="flex gap-3">
+            <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full" />
+            <div suppressHydrationWarning className="flex-1 space-y-2">
+              <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-3/4" />
+              <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-1/2" />
             </div>
           </div>
         </div>
@@ -429,18 +477,26 @@ export default function Home() {
 
   return (
     <>
-      {/* Category Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto px-4 py-2 sticky top-14 z-40 scrollbar-hide border-b border-white/5 mb-4 w-full" style={{ backgroundColor: '#0f0f0f' }}>
-        {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Category Bar Sticky Wrapper */}
+      <div
+        suppressHydrationWarning
+        className="sticky top-0 z-[60] bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5 w-full -mt-[1px]"
+      >
+        <div
+          suppressHydrationWarning
+          className="flex items-center gap-3 overflow-x-auto px-4 md:px-8 py-3 scrollbar-hide"
+        >
+          {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 md:px-4 py-1.5 md:py-1.5 rounded-lg text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
@@ -455,13 +511,15 @@ export default function Home() {
             displayVideos = videos.filter(v => !v.is_short && new Date(v.created_at).getTime() > oneDayAgo);
           }
 
-          const styles = videos.filter(v => v.is_short);
+          const styles = Array.from(
+            new Map(videos.filter(v => v.is_short).map((style) => [style.id, style])).values()
+          );
 
           if (displayVideos.length > 0 || styles.length > 0) {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-0 mt-24">
+                <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
                   {displayVideos.slice(0, 8).map((video) => (
                     <VideoCard
                       key={video.id}
@@ -490,7 +548,7 @@ export default function Home() {
 
                 {/* Remaining Grid of Regular Videos */}
                 {displayVideos.length > 8 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-0">
+                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
                     {displayVideos.slice(8).map((video) => (
                       <VideoCard
                         key={video.id}

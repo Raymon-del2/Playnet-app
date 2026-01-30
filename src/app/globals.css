@@ -64,15 +64,18 @@ body {
 .main-content-area {
   height: 100dvh;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   background: #0f0f0f;
-  /* Account for bottom nav (60px) + safe area on iOS */
-  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  /* Navbar height is 56px (h-14) */
+  padding-top: 56px;
+  /* Bottom nav (60px) */
+  padding-bottom: 74px;
 }
 
 @media (min-width: 1024px) {
   .main-content-area {
+    padding-top: 56px;
     padding-bottom: 0;
   }
 }

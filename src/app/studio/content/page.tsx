@@ -413,7 +413,7 @@ export default function ChannelContent() {
                             <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
                                 <div className="flex items-center gap-4 min-w-0">
                                     <input type="checkbox" className="rounded border-zinc-600 bg-transparent flex-shrink-0" />
-                                    <Link href={`/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
+                                    <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
                                         <div className="w-32 aspect-video bg-zinc-800 rounded overflow-hidden flex-shrink-0 relative">
                                             <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
                                             <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />

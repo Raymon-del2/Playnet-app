@@ -1,0 +1,69 @@
+.wrapper button {
+  font-family: inherit;
+  font-size: 14px;
+  /* Scaled down from 20px for mobile context */
+  background: white;
+  /* Changed from royalblue for transparent/glassmorphism design compatibility or keep royalblue if preferred? User code said royalblue. I'll stick to royalblue as requested but might need tweaking for transparency. I'll use user's royalblue first. */
+  background: rgba(255, 255, 255, 0.1);
+  /* Adapting to the app's dark mode/glass style */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.7em 0.8em;
+  /* Adjusted padding */
+  padding-left: 0.8em;
+  display: flex;
+  align-items: center;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+/* User's original colors */
+.wrapper button {
+  background: royalblue;
+  font-size: 13px;
+  padding: 0.5em 0.8em;
+  padding-left: 0.7em;
+  border-radius: 12px;
+}
+
+.wrapper button span {
+  display: block;
+  margin-left: 0.3em;
+  transition: all 0.3s ease-in-out;
+  font-weight: bold;
+}
+
+.wrapper button svg {
+  display: block;
+  transform-origin: center center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.wrapper button:hover .svg-wrapper {
+  animation: fly-1 0.6s ease-in-out infinite alternate;
+}
+
+.wrapper button:hover svg {
+  transform: translateX(1.2em) rotate(45deg) scale(1.1);
+}
+
+.wrapper button:hover span {
+  transform: translateX(5em);
+}
+
+.wrapper button:active {
+  transform: scale(0.95);
+}
+
+@keyframes fly-1 {
+  from {
+    transform: translateY(0.1em);
+  }
+
+  to {
+    transform: translateY(-0.1em);
+  }
+}

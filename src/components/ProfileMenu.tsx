@@ -78,8 +78,8 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 <div className="py-2 border-b border-gray-700/50">
                     <div className="relative group">
                         <MenuItem icon={<CmailIcon />} label="Cmail Account" />
-                        <div className="pointer-events-none absolute right-0 top-0 translate-x-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
-                            <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                        <div suppressHydrationWarning className="pointer-events-none absolute right-0 top-0 translate-x-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+                            <div suppressHydrationWarning className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
                                 Coming soon
                             </div>
                         </div>
@@ -146,7 +146,7 @@ function MenuItem({
 // Icons
 const CmailIcon = () => (
     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
         <text x="12" y="16" textAnchor="middle" fontSize="14" fontWeight="bold" fill="currentColor">C</text>
     </svg>
 );
